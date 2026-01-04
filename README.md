@@ -1,102 +1,88 @@
 # Cataclysm Protocol
 
-**Turn-Based Tactical Survival Game** | Unity 2D
+Turn-Based Tactical Survival Game | Unity 2D
 
-A post-apocalyptic survival game featuring turn-based tactical combat, dynamic AI systems, and deep character progression.
+A survival RPG where you choose your apocalypse. Combine different disaster types to create unique survival scenarios, then navigate the aftermath as a scientist seeking long-term human survival.
 
-## 🎮 Game Overview
+## 🎮 Project Overview
 
-- **Genre**: Turn-Based Tactical RPG / Survival
-- **Engine**: Unity 2022.3 LTS
-- **Platform**: PC (Windows)
-- **Status**: In Development (Demo Available)
+- Genre: Turn-Based Tactical RPG / Survival
+- Engine: Unity 2022.3 LTS
+- Status: In Development
 
-## 🌍 Setting
+## 🌍 Core Concept: Choose Your Apocalypse
 
-Set in Vermont, USA after a dual catastrophe:
-- **Biotech Collapse**: Gene-modified creatures roam the wilderness
-- **Solar EMP**: Periodic electromagnetic pulses disable electronics
+The game features a modular disaster system — players select which catastrophes shape their world before each playthrough:
 
-Players take on the role of a scientist working to rebuild civilization while surviving against mutated wildlife.
+| Category | Disaster Types |
+|----------|---------------|
+| Climate | Extreme Cold, Extreme Heat, Rising Seas, Acid Rain, Thunderstorms |
+| Ecology | Biological Mutation, Weaponized Evolution, Mass Proliferation |
+| Technology | AI Uprising, Self-replicating Nanobots, Global EMP Events |
+| War | Nuclear Wasteland, Alien Invasion |
+| Cosmic | Solar Anomalies, Asteroid Impact, Supervolcano |
+| Supernatural | *(Easter egg category)* |
+
+Disasters can be combined — face mutated creatures AND periodic electromagnetic storms, or survive extreme cold in a nuclear wasteland. Each combination creates different resource challenges, enemy types, and survival strategies.
+
+### Demo Scenario
+> Weaponized biological mutations + Periodic solar EMP storms
+> 
+> Engineered predators hunt with terrifying efficiency, exploiting human weaknesses by design. Meanwhile, electromagnetic pulses periodically disable technology, making recovery nearly impossible. As a scientist, you see what others don't: every threat is also a potential resource.
 
 ## ⚔️ Core Systems
 
-### 1. Initiative-Based Combat
-Turn order determined by initiative rolls, creating dynamic tactical situations.
+### Combat System
+- Initiative-based turns: Dynamic turn order based on stats
+- Grid-based tactics: Positioning and terrain matter
+- D&D-inspired mechanics: Attack rolls, armor class, dice-based damage
+- Action Point management: Strategic resource allocation
 
-### 2. Grid Movement System
-- Manhattan distance calculations
-- Pathfinding with obstacle avoidance
-- Attack range validation (min/max)
+### Creature AI
+Enemies feature behavior tree-driven AI with unique abilities:
 
-### 3. AI State Machines
-Enemies feature complex behavior patterns:
-
-**Mantis Grapple System** (See: `Mantis.cs`, `MonsterBase.cs`)
+Example - Mantis Grapple State Machine:
 ```
-NORMAL → [Grapple Hit] → GRAPPLING → [Release] → NORMAL
-                              ↓
-                         Bite Attack
-                         (turns tracked)
+NORMAL → [Grapple Success] → GRAPPLING → [Release Check] → NORMAL
+                                  ↓
+                            Bite Attack
+                            (turn counter tracked)
 ```
-- Grapple success → Player loses DEX bonus to AC
-- Release probability increases: 30% → 50% → 70%
-- Dual attack modes: Blade (2d6+2) vs Grapple → Bite (4d6+2)
 
-### 4. Weapon & Stance System
-- Multiple weapon types with unique properties
-- Stance modifiers affecting combat stats
-- Action Point resource management
+### Survival Layer
+- Needs system: Water (clean/dirty), Food (nutrients, contamination), Temperature
+- Environmental hazards: Vary based on selected disasters
+- Resource scarcity: Every threat is a potential resource
 
-## 📁 Project Structure
-
+## 📁 Code Structure
 ```
 Scripts/
-├── Combat/
-│   ├── BattleManager.cs      # Core combat orchestration
-│   ├── BattleMoveSystem.cs   # Movement during combat
-│   ├── TargetSelector.cs     # Target selection UI
-│   └── CombatSystem.cs       # Damage calculations
-├── AI/
-│   ├── MonsterBase.cs        # Base class for all enemies
-│   ├── Mantis.cs             # Mantis with grapple mechanics
-│   ├── Beaver.cs             # Beaver enemy
-│   ├── PorcupineBoss.cs      # Boss encounter
-│   └── MonsterPatrol.cs      # Patrol behavior
-├── Player/
-│   ├── Player.cs             # Player controller
-│   ├── PlayerCombatData.cs   # Combat statistics
-│   ├── PlayerInventoryData.cs# Inventory system
-│   └── PlayerVision.cs       # Fog of war
-├── Systems/
-│   ├── GridManager2D.cs      # Grid-based movement
-│   ├── SaveManager1.cs       # Save/Load system
-│   ├── StanceSystem.cs       # Combat stances
-│   └── WeaponManager.cs      # Weapon handling
-└── UI/
-    ├── BattleUI.cs           # Combat interface
-    ├── WeaponInventoryUI.cs  # Inventory display
-    └── DamagePopupManager.cs # Floating damage numbers
+├── Combat/      # Battle management, damage, targeting
+├── AI/          # Creature behaviors, state machines, behavior trees
+├── Player/      # Character control, stats, inventory
+├── Weapons/     # Weapon data, ranged/melee systems, stances
+├── UI/          # Combat interface, health bars, menus
+├── Grid/        # Grid management, fog of war, range display
+├── Scene/       # Scene transitions, portals, spawn points
+└── Systems/     # Save system, camera, feats, utilities
 ```
-
-## 🎯 Key Features
-
-- **D&D-inspired combat**: Attack rolls, armor class, dice-based damage
-- **Fog of War**: Limited visibility exploration
-- **Save System**: Full game state persistence
-- **Modular AI**: Behavior tree-based enemy logic
-- **Scene Management**: Seamless area transitions
 
 ## 🔧 Technical Highlights
 
-- Interface-driven design (`ICombatTarget`, `IMobAction`)
+- Interface-driven design (ICombatTarget, IMobAction)
+- Behavior tree architecture for diverse enemy AI
+- Modular disaster system affecting gameplay variables
 - Event-based UI updates
 - Grid-based pathfinding
-- State machine AI with memory (grapple turn tracking)
 
-## 📜 License
+## 🎯 Design Philosophy
 
-Personal portfolio project. Code samples for educational reference.
+> "Every threat is a resource. Every weakness can be exploited — including your own."
+
+- Player agency: Choose your challenges before the game begins
+- Replayability: Different disaster combinations = different experiences
+- Tactical depth: Enemies are puzzles, not just obstacles
+- Scientist fantasy: Knowledge and adaptation over brute force
 
 ## 👤 Author
 
@@ -104,4 +90,4 @@ LNilLea - Game Designer & Programmer
 
 ---
 
-*Part of my game design portfolio showcasing systems design and Unity development skills.*
+*This repository contains gameplay systems code. Art assets and full project files not included.*
