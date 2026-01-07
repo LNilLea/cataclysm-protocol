@@ -9,6 +9,7 @@ using UnityEngine;
 /// 1. 每发连射独立输出判定日志
 /// 2. 确保所有连射都正确进行命中判定
 /// 3. 每次连射应用正确的命中减值
+/// 4. 【新增】枪械使用固定伤害，不受属性加值和架势加成影响
 /// </summary>
 public class BattleManager : MonoBehaviour
 {
@@ -425,6 +426,11 @@ public class BattleManager : MonoBehaviour
 
     /// <summary>
     /// 【修复版】执行远程攻击（支持连射，每发独立判定和日志输出）
+    /// 
+    /// 【重要】枪械伤害规则（根据设计文档）：
+    /// - 伤害 = 武器固定伤害（不受属性加值、架势加成、专长加成影响！）
+    /// - 命中 = d20 + (反应-3) + 命中加值 + 架势命中修正
+    /// 
     /// 连射规则：
     /// - 第1发：正常命中判定
     /// - 第2发：命中 - 武器连射减值
@@ -450,12 +456,15 @@ public class BattleManager : MonoBehaviour
         int burstPenalty = weapon.GetEffectiveBurstPenalty();
         Debug.Log($"[PerformRangedAttack] 连射减值={burstPenalty}");
 
+        // 【新增】获取武器固定伤害（用于显示）
+        int fixedDamage = weapon.CalculateDamage(0);  // 参数不影响结果
+        Debug.Log($"[PerformRangedAttack] 武器固定伤害={fixedDamage}");
+
         // 构建总结日志
         string summaryLog;
         if (burstCount > 1)
         {
-            summaryLog = $"玩家使用 [{weapon.Name}] 对 {target.Name} 进行 {burstCount} 连射！\n";
-            // 【修复】立即输出连射开始信息
+            summaryLog = $"玩家使用 [{weapon.Name}] 对 {target.Name} 进行 {burstCount} 连射！（每发伤害: {fixedDamage}）\n";
             Debug.Log($"[Battle] 玩家使用 [{weapon.Name}] 对 {target.Name} 进行 {burstCount} 连射！");
         }
         else
@@ -467,7 +476,7 @@ public class BattleManager : MonoBehaviour
         int hits = 0;
         int attributeValue = GetWeaponAttribute(weapon);
 
-        // ========== 修复：每发独立进行判定并输出日志 ==========
+        // ========== 每发独立进行判定并输出日志 ==========
         for (int i = 0; i < burstCount; i++)
         {
             Debug.Log($"[PerformRangedAttack] === 第{i + 1}发开始 ===");
@@ -479,7 +488,7 @@ public class BattleManager : MonoBehaviour
             int hitRoll = weapon.CalculateHit(attributeValue);
             Debug.Log($"[PerformRangedAttack] 第{i + 1}发基础命中值={hitRoll}");
 
-            // 应用架势命中修正
+            // 应用架势命中修正（命中可以受架势影响）
             if (stanceSystem != null)
             {
                 int stanceBonus = stanceSystem.GetTotalHitModifier();
@@ -495,9 +504,6 @@ public class BattleManager : MonoBehaviour
                 Debug.Log($"[PerformRangedAttack] 体魄惩罚={strengthPenalty}，修正后={hitRoll}");
 
             // 应用连射命中减值（第2发开始）
-            // 第1发(i=0)：无减值
-            // 第2发(i=1)：-burstPenalty
-            // 第3发(i=2)：-burstPenalty * 2
             int burstPenaltyThisShot = i * burstPenalty;
             hitRoll -= burstPenaltyThisShot;
             Debug.Log($"[PerformRangedAttack] 第{i + 1}发连射减值={burstPenaltyThisShot}，最终命中={hitRoll}");
@@ -523,20 +529,20 @@ public class BattleManager : MonoBehaviour
             // ========== 命中判定 ==========
             if (hitRoll >= target.CurrentAC)
             {
-                // 计算伤害（每发独立计算）
+                // 【核心修改】枪械使用固定伤害，不加任何额外加成！
                 int damage = weapon.CalculateDamage(attributeValue);
+                
+                // 【删除】不再应用架势伤害修正
+                // if (stanceSystem != null)
+                // {
+                //     damage += stanceSystem.GetTotalDamageModifier();
+                // }
 
-                // 应用架势伤害修正
-                if (stanceSystem != null)
-                {
-                    damage += stanceSystem.GetTotalDamageModifier();
-                }
-
-                // 应用专长伤害加成
-                if (player.combatData != null)
-                {
-                    player.combatData.DealDamage(ref damage);
-                }
+                // 【删除】不再应用专长伤害加成
+                // if (player.combatData != null)
+                // {
+                //     player.combatData.DealDamage(ref damage);
+                // }
 
                 if (damage < 0) damage = 0;
 
@@ -546,7 +552,7 @@ public class BattleManager : MonoBehaviour
                 hits++;
 
                 shotLog += $"命中！{damage}伤害";
-                Debug.Log($"[PerformRangedAttack] 第{i + 1}发命中！伤害={damage}");
+                Debug.Log($"[PerformRangedAttack] 第{i + 1}发命中！固定伤害={damage}");
             }
             else
             {
@@ -554,7 +560,7 @@ public class BattleManager : MonoBehaviour
                 Debug.Log($"[PerformRangedAttack] 第{i + 1}发未命中");
             }
 
-            // ========== 【关键修复】每发立即输出判定日志 ==========
+            // ========== 每发立即输出判定日志 ==========
             Debug.Log($"[Battle] {shotLog}");
             summaryLog += shotLog + "\n";
 
@@ -594,6 +600,7 @@ public class BattleManager : MonoBehaviour
 
     /// <summary>
     /// 执行玩家近战攻击
+    /// 【注意】近战武器仍然受架势和专长加成影响！
     /// </summary>
     private string PerformPlayerAttack(ICombatTarget target, Weapon weapon)
     {
@@ -613,11 +620,13 @@ public class BattleManager : MonoBehaviour
         {
             int damage = weapon.CalculateDamage(attributeValue);
 
+            // 近战武器受架势伤害修正
             if (stanceSystem != null)
             {
                 damage += stanceSystem.GetTotalDamageModifier();
             }
 
+            // 近战武器受专长伤害加成
             if (player.combatData != null)
             {
                 player.combatData.DealDamage(ref damage);
